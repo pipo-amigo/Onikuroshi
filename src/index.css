@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'JAPANESE';
+  src: url('./assets/fonts/JAPANESE-Regular.otf') format('opentype'),
+       url('./assets/fonts/JAPANESE-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'JAPANESE';
+  src: url('./assets/fonts/JAPANESE-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+/* src/index.css */
+.text-stroke-white {
+  @apply font-japanese text-4xl; /* apply Tailwind classes */
+  -webkit-text-stroke: 2px white;
+  color: black;
+}
