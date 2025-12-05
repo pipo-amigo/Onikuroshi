@@ -257,8 +257,8 @@ const handleDeleteOrder = async (phoneNumber) => {
                   onChange={(e) => setSectionType(e.target.value)}
                   className="border border-gray-300 p-2 rounded focus:ring-1 focus:ring-gray-400 focus:outline-none"
                 >
-                  <option value="men">Men</option>
-                  <option value="women">Women</option>
+                  <option value="men">Compression</option>
+                  <option value="women">Shorts</option>
                   <option value="specials">Specials</option>
                 </select>
                 <input
