@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const AdminPage = () => {
   const [activeTab, setActiveTab] = useState("dashboard"); // "dashboard" or "orders"
@@ -21,6 +22,16 @@ const AdminPage = () => {
 
   const BASE_URL = "http://localhost:5000";
 
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("adminToken");
+    navigate("/adminLogin");
+  };
+  useEffect(() => {
+  const token = localStorage.getItem("adminToken");
+  if (!token) navigate("/adminLogin");
+}, [navigate]);
   // -------------------- Fetch Data --------------------
   const fetchBanners = async () => {
     try {
@@ -154,6 +165,20 @@ const handleDeleteOrder = async (productId) => {
   // -------------------- JSX --------------------
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
+        <button
+        onClick={handleLogout}
+        style={{
+          padding: "10px 18px",
+          backgroundColor: "#e91e63",
+          border: "none",
+          borderRadius: "8px",
+          color: "#fff",
+          cursor: "pointer",
+          fontWeight: "bold",
+        }}
+      >
+        Logout
+      </button>
       {loading && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="w-20 h-20 border-4 border-gray-300 border-t-gray-800 rounded-full animate-spin"></div>

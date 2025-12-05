@@ -7,6 +7,7 @@ import { WomenPage } from "./pages/WomenPage";
 import { SpecialsPage } from "./pages/SpecialsPage";
 import AdminPage from "./pages/AdminPage";
 import { CartPage } from "./pages/CartPage";
+import AdminLogin from "./pages/AdminLogin";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/women" element={<WomenPage />} />
         <Route path="/specials" element={<SpecialsPage />} />
         <Route path="/admin" element={<AdminPage/>}/>
+        <Route path="/adminLogin" element={<AdminLogin/>}/>
         <Route path="/cart" element={<CartPage />} />
       </Routes>
     </Router>

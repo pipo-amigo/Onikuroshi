@@ -3,19 +3,41 @@ import cors from "cors";
 import multer from "multer";
 import axios from "axios";
 import FormData from "form-data";
+import dotenv from "dotenv";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
+dotenv.config();
 const app = express();
 const PORT = 5000;
-const IMGBB_API_KEY = "c010603e0789b6ef692f7bc8f90f558d";
+const IMGBB_API_KEY = process.env.IMGBB_API_KEY;
 
 app.use(cors());
 app.use(express.json());
 
 // -------------------- JSONBIN CONFIG --------------------
-const BIN_ID = "68dd395eae596e708f0282f7";
-const MASTER_KEY = "$2a$10$K0QOI255GaIZTyh5KeHZYO9arH8bARiJ4Mtz2qfHdoPJ/S/BUBbo2";
+const BIN_ID = process.env.BIN_ID;
+const MASTER_KEY = process.env.MASTER_KEY;
 const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
+let ADMIN_PASSWORD_HASH;
+(async () => {
+  ADMIN_PASSWORD_HASH = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
+})();
+// Login Route
+app.post("/api/auth/login",async (req, res) => {
+  const { password } = req.body;
+  if (!password) return res.status(400).json({ error: "Password required" });
+
+  const isValid = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
+  if (!isValid) return res.status(401).json({ error: "Invalid password" });
+
+  const token = jwt.sign({ role: "admin" }, process.env.JWT_SECRET, {
+    expiresIn: process.env.TOKEN_EXPIRE
+  });
+
+  res.json({ message: "Login success", token });
+});
 // -------------------- HELPERS --------------------
 async function loadData() {
   try {
@@ -72,7 +94,7 @@ app.get("/api/homepage", async (req, res) => {
 });
 
 // Upload banner
-app.post("/api/homepage/:bannerType", upload.single("image"), async (req, res) => {
+app.post("/api/homepage/:bannerType",upload.single("image"), async (req, res) => {
   const { bannerType } = req.params;
   if (!req.file) return res.status(400).json({ error: "Image required" });
 
@@ -127,7 +149,7 @@ const addProduct = async (req, section) => {
 };
 
 // Add products
-app.post("/api/products/men", upload.fields([{ name: "image1" }, { name: "image2" }]), async (req, res) => {
+app.post("/api/products/men",upload.fields([{ name: "image1" }, { name: "image2" }]), async (req, res) => {
   try {
     const product = await addProduct(req, "men");
     res.json({ message: "Men product added", product });
@@ -153,7 +175,7 @@ app.post("/api/products/specials", upload.fields([{ name: "image1" }, { name: "i
 });
 
 // Delete product
-app.delete("/api/products/:section/:id", async (req, res) => {
+app.delete("/api/products/:section/:id",async (req, res) => {
   const { section, id } = req.params;
   const data = await loadData();
   if (!data[section]) return res.status(400).json({ error: "Invalid section" });
@@ -196,7 +218,7 @@ app.get("/api/products/:id", async (req, res) => {
   res.json(product);
 });
 
-app.post("/api/orders", async (req, res) => {
+app.post("/api/orders",async (req, res) => {
   const newOrders = req.body; // Array of orders [{productId, name, size, quantity, fullName, location, phoneNumber, price}]
   try {
     const data = await loadData();

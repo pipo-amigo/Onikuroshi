@@ -92,7 +92,7 @@ useEffect(() => {
 
           {/* Search Input & Results */}
 {searchOpen && (
-  <div className="absolute top-10 right-0 w-96 bg-white shadow-lg rounded-lg z-50"> {/* width increased */}
+  <div className="absolute top-10 right-0 w-80 min-w-60 bg-white shadow-lg rounded-lg z-50"> {/* width increased */}
     <input
       type="text"
       autoFocus
