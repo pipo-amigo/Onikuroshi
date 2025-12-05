@@ -26,11 +26,11 @@ const AdminPage = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
-    navigate("/adminLogin");
+    navigate("/admin/login");
   };
   useEffect(() => {
   const token = localStorage.getItem("adminToken");
-  if (!token) navigate("/adminLogin");
+  if (!token) navigate("/admin/login");
 }, [navigate]);
   // -------------------- Fetch Data --------------------
   const fetchBanners = async () => {
