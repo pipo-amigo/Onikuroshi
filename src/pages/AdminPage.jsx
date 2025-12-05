@@ -20,7 +20,7 @@ const AdminPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const BASE_URL = "http://localhost:5000";
+  const BASE_URL = "https://onikuroshi-backend-production.up.railway.app";
 
   const navigate = useNavigate();
 
@@ -148,12 +148,12 @@ const AdminPage = () => {
     }
   };
 
-const handleDeleteOrder = async (productId) => {
+const handleDeleteOrder = async (phoneNumber) => {
   if (!window.confirm("Delete this order?")) return;
   try {
     setLoading(true);
-    await axios.delete(`${BASE_URL}/api/orders/${productId}`);
-    fetchOrders();
+    await axios.delete(`${BASE_URL}/api/orders/${phoneNumber}`);
+    fetchOrders(); // refresh orders after deletion
   } catch (err) {
     console.error(err);
     alert("Failed to delete order");
@@ -161,6 +161,7 @@ const handleDeleteOrder = async (productId) => {
     setLoading(false);
   }
 };
+
 
   // -------------------- JSX --------------------
   return (
@@ -363,7 +364,7 @@ const handleDeleteOrder = async (productId) => {
                         <td className="py-2 px-4 border">{order.location}</td>
                         <td className="py-2 px-4 border">
                         <button
-                          onClick={() => handleDeleteOrder(order.productId)}
+                          onClick={() => handleDeleteOrder(order.phoneNumber)}
                           className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition"
                         >
                           Delete

@@ -28,16 +28,16 @@ export const ProductPage = () => {
         setLoading(true);
 
         // 1. Fetch product by ID
-        const res = await fetch(`http://localhost:5000/api/products/${id}`);
+        const res = await fetch(`https://onikuroshi-backend-production.up.railway.app/api/products/${id}`);
         if (!res.ok) throw new Error("Product not found");
         const productData = await res.json();
         setProduct(productData);
 
         // 2. Fetch all sections
         const [menRes, womenRes, specialsRes] = await Promise.all([
-          fetch("http://localhost:5000/api/products/men"),
-          fetch("http://localhost:5000/api/products/women"),
-          fetch("http://localhost:5000/api/products/specials"),
+          fetch("https://onikuroshi-backend-production.up.railway.app/api/products/men"),
+          fetch("https://onikuroshi-backend-production.up.railway.app/api/products/women"),
+          fetch("https://onikuroshi-backend-production.up.railway.app/api/products/specials"),
         ]);
 
         const [men, women, specials] = await Promise.all([
@@ -136,7 +136,7 @@ const handleOrderSubmit = async () => {
 
   try {
     // Send order to backend
-    const res = await fetch("http://localhost:5000/api/orders", {
+    const res = await fetch("https://onikuroshi-backend-production.up.railway.app/api/orders", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

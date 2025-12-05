@@ -55,7 +55,7 @@ export const CartPage = () => {
       }));
 
       // Send orders to your backend
-      await axios.post("http://localhost:5000/api/orders", orderData);
+      await axios.post("https://onikuroshi-backend-production.up.railway.app/api/orders", orderData);
 
       alert("Order submitted successfully!");
       setShowForm(false);

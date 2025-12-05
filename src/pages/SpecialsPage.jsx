@@ -6,7 +6,7 @@ export const SpecialsPage = () => {
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
 
-  const BASE_URL = "http://localhost:5000"; // Replace with your API URL
+  const BASE_URL = "https://onikuroshi-backend-production.up.railway.app"; // Replace with your API URL
 
   useEffect(() => {
     const fetchSpecials = async () => {

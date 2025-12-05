@@ -1,15 +1,15 @@
-import express from "express";
-import cors from "cors";
-import multer from "multer";
-import axios from "axios";
-import FormData from "form-data";
-import dotenv from "dotenv";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+const express = require("express");
+const cors = require("cors");
+const multer = require("multer");
+const axios = require("axios");
+const FormData = require("form-data");
+const dotenv = require("dotenv");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 dotenv.config();
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 const IMGBB_API_KEY = process.env.IMGBB_API_KEY;
 
 app.use(cors());
@@ -243,17 +243,22 @@ app.get("/api/orders", async (req, res) => {
   }
 });
 //delete order for admin by orderId
-app.delete("/api/orders/:productId", async (req, res) => {
-  const { productId } = req.params;
+app.delete("/api/orders/:phoneNumber", async (req, res) => {
+  const { phoneNumber } = req.params; // get phone number from params
   try {
     const data = await loadData();
     if (!data.orders) data.orders = [];
 
     const originalLength = data.orders.length;
-    data.orders = data.orders.filter(order => order.productId != productId);
 
-    if (data.orders.length === originalLength)
+    // Filter out the order with matching phoneNumber
+    data.orders = data.orders.filter(
+      (order) => String(order.phoneNumber) !== String(phoneNumber)
+    );
+
+    if (data.orders.length === originalLength) {
       return res.status(404).json({ error: "Order not found" });
+    }
 
     await saveData(data);
     res.json({ message: "Order deleted successfully" });
@@ -262,6 +267,8 @@ app.delete("/api/orders/:productId", async (req, res) => {
     res.status(500).json({ error: "Failed to delete order" });
   }
 });
+
+
 //-------------------- SEARCH PRODUCT ----------------------
 app.post("/api/products/search", async (req, res) => {
   const { q } = req.body; // now expects { q: "search term" }

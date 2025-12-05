@@ -6,7 +6,7 @@ import { FaArrowLeft } from "react-icons/fa"; // using react-icons for the arrow
 export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const backendUrl = "http://localhost:5000"; // <---- CHANGE THIS
+  const backendUrl = "https://onikuroshi-backend-production.up.railway.app"; // <---- CHANGE THIS
 
   const handleLogin = async () => {
     if (!password) return setError("Please enter password!");

@@ -28,7 +28,7 @@ useEffect(() => {
 
   const delayDebounce = setTimeout(async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/products/search`, {
+      const res = await fetch(`https://onikuroshi-backend-production.up.railway.app/api/products/search`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ q: searchQuery }),

@@ -6,7 +6,7 @@ export const MenPage = () => {
   const [products, setProducts] = useState({ title: "Onikuroshi's Compression", items: [] });
   const [loading, setLoading] = useState(true);
 
-  const BASE_URL = "http://localhost:5000"; // change to your deployed API URL later
+  const BASE_URL = "https://onikuroshi-backend-production.up.railway.app"; // change to your deployed API URL later
 
   useEffect(() => {
     const fetchProducts = async () => {

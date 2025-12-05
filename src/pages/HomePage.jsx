@@ -9,7 +9,7 @@ import { Footer } from "../components/Footer";
 import { SkeletonBanner } from "../components/SkeletonBanner";
 import { SkeletonProductSection } from "../components/SkeletonProductSection";
 import backgroundImage from "../assets/oni/28.jpg"  
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = "https://onikuroshi-backend-production.up.railway.app";
 
 export const Homepage = () => {
   const [banners, setBanners] = useState({ banner1: "", banner2: "" });
