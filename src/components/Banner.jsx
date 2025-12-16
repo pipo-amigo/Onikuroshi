@@ -6,7 +6,7 @@ export const Banner = ({ image1, image2, loading }) => (
     {loading ? (
       <div className="w-full h-[450px] lg:h-[600px] bg-gray-500 animate-pulse rounded-2xl"></div>
     ) : (
-      <div className="relative w-full h-[450px] lg:h-[600px] max-md:rounded-b-2xl overflow-hidden shadow-xl">
+      <div className="relative w-full h-[450px] lg:h-[600px]  overflow-hidden shadow-xl">
 
         {/* Two images side-by-side */}
         <div className="w-full h-full flex max-md:flex-col">

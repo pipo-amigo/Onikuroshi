@@ -33,7 +33,7 @@ export const MenPage = () => {
     <>
       <Header />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <ProductSection products={products} loading={loading} />
+        <ProductSection products={products} loading={loading}  showBG={false}/>
       </main>
     </>
   );

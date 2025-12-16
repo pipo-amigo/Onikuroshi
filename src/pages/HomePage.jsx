@@ -7,8 +7,11 @@ import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 
 import { SkeletonBanner } from "../components/SkeletonBanner";
+
 import { SkeletonProductSection } from "../components/SkeletonProductSection";
-import backgroundImage from "../assets/oni/28.jpg"  
+
+// import backgroundImage from "../assets/oni/oni2.jpg"
+
 const BASE_URL = "https://onikuroshi-backend-production.up.railway.app";
 
 export const Homepage = () => {
@@ -55,13 +58,14 @@ export const Homepage = () => {
 
   return (
   <div
-    style={{
-      backgroundImage: `url(${backgroundImage})`,
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-      backgroundRepeat: "no-repeat",
-      minHeight: "100vh",
-    }}
+    // style={{
+    //   backgroundImage: `url(${backgroundImage})`,
+    //   backgroundSize: "contain",
+    //   backgroundPosition: "center",
+    //   backgroundRepeat: "no-repeat",
+    //   backgroundPositionY:700,
+    //   minHeight: "100vh",
+    // }}
     className="text-black"
   >
     {/* <AnnouncementBar /> */}
@@ -75,6 +79,7 @@ export const Homepage = () => {
       ) : (
         men.length > 0 && (
           <ProductSection
+          showBG={true}
             products={{ title: "Onikuroshi's Compression", items: men.slice(0, 8) }}
           />
         )
@@ -85,6 +90,7 @@ export const Homepage = () => {
       ) : (
         women.length > 0 && (
           <ProductSection
+          showBG={true}
             products={{ title: "Onikuroshi's Shorts", items: women.slice(0, 8) }}
           />
         )
@@ -96,6 +102,7 @@ export const Homepage = () => {
       ) : (
         specials.length > 0 && (
           <ProductSection
+          showBG={true}
             products={{ title: "Specials", items: specials.slice(0, 8) }}
           />
         )

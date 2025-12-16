@@ -24,8 +24,9 @@ let ADMIN_PASSWORD_HASH;
 (async () => {
   ADMIN_PASSWORD_HASH = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
 })();
+
 // Login Route
-app.post("/api/auth/login",async (req, res) => {
+app.post("/api/auth/login", async (req, res) => {
   const { password } = req.body;
   if (!password) return res.status(400).json({ error: "Password required" });
 
@@ -38,15 +39,16 @@ app.post("/api/auth/login",async (req, res) => {
 
   res.json({ message: "Login success", token });
 });
+
 // -------------------- HELPERS --------------------
 async function loadData() {
   try {
     const res = await axios.get(JSONBIN_URL, {
       headers: { "X-Master-Key": MASTER_KEY },
     });
-    return res.data.record; // JSONBin wraps your data inside "record"
+    return res.data.record;
   } catch (err) {
-    console.error("Failed to load data from JSONBin", err);
+    console.error("Failed to load data", err);
     throw err;
   }
 }
@@ -61,7 +63,7 @@ async function saveData(data) {
     });
     return res.data;
   } catch (err) {
-    console.error("Failed to save data to JSONBin", err);
+    console.error("Failed to save data", err);
     throw err;
   }
 }
@@ -83,7 +85,6 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // -------------------- HOMEPAGE --------------------
-// Get banners
 app.get("/api/homepage", async (req, res) => {
   try {
     const data = await loadData();
@@ -93,8 +94,7 @@ app.get("/api/homepage", async (req, res) => {
   }
 });
 
-// Upload banner
-app.post("/api/homepage/:bannerType",upload.single("image"), async (req, res) => {
+app.post("/api/homepage/:bannerType", upload.single("image"), async (req, res) => {
   const { bannerType } = req.params;
   if (!req.file) return res.status(400).json({ error: "Image required" });
 
@@ -105,13 +105,11 @@ app.post("/api/homepage/:bannerType",upload.single("image"), async (req, res) =>
     await saveData(data);
     res.json({ message: `${bannerType} updated`, banner: url });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Failed to upload banner" });
   }
 });
 
 // -------------------- PRODUCTS --------------------
-// Get products
 app.get("/api/products/men", async (req, res) => {
   const data = await loadData();
   res.json(data.men);
@@ -125,14 +123,16 @@ app.get("/api/products/specials", async (req, res) => {
   res.json(data.specials);
 });
 
-// Add product helper
+// Add product helper (supports 3 images + description)
 const addProduct = async (req, section) => {
-  const { name, price, status } = req.body;
-  if (!name || !price || !req.files?.image1 || !req.files?.image2)
-    throw new Error("All fields + 2 images required");
+  const { name, price, status, description } = req.body;
+
+  if (!name || !price || !req.files?.image1 || !req.files?.image2 || !req.files?.image3)
+    throw new Error("Fields name, price, description + 3 images required");
 
   const img1 = await uploadToImgbb(req.files.image1[0].buffer);
   const img2 = await uploadToImgbb(req.files.image2[0].buffer);
+  const img3 = await uploadToImgbb(req.files.image3[0].buffer);
 
   const data = await loadData();
   const product = {
@@ -140,47 +140,109 @@ const addProduct = async (req, section) => {
     name,
     price,
     status: status || "None",
-    images: [img1, img2],
+    description: description || "",
+    images: [img1, img2, img3],
   };
 
   data[section].push(product);
   await saveData(data);
+
   return product;
 };
+//product section bg 
+app.get("/api/productSectionBg", async (req, res) => {
+  try {
+    const data = await loadData();
+    res.json({ bg: data.productSectionBg || "" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch product section background" });
+  }
+});
+app.post(
+  "/api/productSectionBg",
+  upload.single("image"),
+  async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ error: "Image required" });
+    }
 
-// Add products
-app.post("/api/products/men",upload.fields([{ name: "image1" }, { name: "image2" }]), async (req, res) => {
-  try {
-    const product = await addProduct(req, "men");
-    res.json({ message: "Men product added", product });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
+    try {
+      const imageUrl = await uploadToImgbb(req.file.buffer);
+      const data = await loadData();
+
+      data.productSectionBg = imageUrl;
+      await saveData(data);
+
+      res.json({
+        message: "Product section background updated",
+        bg: imageUrl,
+      });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to upload background image" });
+    }
   }
-});
-app.post("/api/products/women", upload.fields([{ name: "image1" }, { name: "image2" }]), async (req, res) => {
-  try {
-    const product = await addProduct(req, "women");
-    res.json({ message: "Women product added", product });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
+);
+// Add product routes
+app.post(
+  "/api/products/men",
+  upload.fields([
+    { name: "image1" },
+    { name: "image2" },
+    { name: "image3" }
+  ]),
+  async (req, res) => {
+    try {
+      const product = await addProduct(req, "men");
+      res.json({ message: "Men product added", product });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
   }
-});
-app.post("/api/products/specials", upload.fields([{ name: "image1" }, { name: "image2" }]), async (req, res) => {
-  try {
-    const product = await addProduct(req, "specials");
-    res.json({ message: "Special product added", product });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
+);
+
+app.post(
+  "/api/products/women",
+  upload.fields([
+    { name: "image1" },
+    { name: "image2" },
+    { name: "image3" }
+  ]),
+  async (req, res) => {
+    try {
+      const product = await addProduct(req, "women");
+      res.json({ message: "Women product added", product });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
   }
-});
+);
+
+app.post(
+  "/api/products/specials",
+  upload.fields([
+    { name: "image1" },
+    { name: "image2" },
+    { name: "image3" }
+  ]),
+  async (req, res) => {
+    try {
+      const product = await addProduct(req, "specials");
+      res.json({ message: "Special product added", product });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  }
+);
 
 // Delete product
-app.delete("/api/products/:section/:id",async (req, res) => {
+app.delete("/api/products/:section/:id", async (req, res) => {
   const { section, id } = req.params;
   const data = await loadData();
   if (!data[section]) return res.status(400).json({ error: "Invalid section" });
+
   data[section] = data[section].filter((p) => p.id != id);
   await saveData(data);
+
   res.json({ message: `Product removed from ${section}` });
 });
 
@@ -197,7 +259,11 @@ app.put("/api/products/:section/:id/status", async (req, res) => {
 
   data[section][index].status = status;
   await saveData(data);
-  res.json({ message: "Product status updated", product: data[section][index] });
+
+  res.json({
+    message: "Product status updated",
+    product: data[section][index],
+  });
 });
 
 // Get product by ID
@@ -209,7 +275,7 @@ app.get("/api/products/:id", async (req, res) => {
   let product = null;
 
   for (const section of sections) {
-    product = data[section].find(p => p.id == id);
+    product = data[section].find((p) => p.id == id);
     if (product) break;
   }
 
@@ -218,8 +284,9 @@ app.get("/api/products/:id", async (req, res) => {
   res.json(product);
 });
 
-app.post("/api/orders",async (req, res) => {
-  const newOrders = req.body; // Array of orders [{productId, name, size, quantity, fullName, location, phoneNumber, price}]
+// Orders
+app.post("/api/orders", async (req, res) => {
+  const newOrders = req.body;
   try {
     const data = await loadData();
     if (!data.orders) data.orders = [];
@@ -227,31 +294,27 @@ app.post("/api/orders",async (req, res) => {
     await saveData(data);
     res.json({ message: "Orders saved successfully" });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Failed to save orders" });
   }
 });
 
-// GET /api/orders - get all orders (for admin)
 app.get("/api/orders", async (req, res) => {
   try {
     const data = await loadData();
     res.json(data.orders || []);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Failed to fetch orders" });
   }
 });
-//delete order for admin by orderId
+
 app.delete("/api/orders/:phoneNumber", async (req, res) => {
-  const { phoneNumber } = req.params; // get phone number from params
+  const { phoneNumber } = req.params;
   try {
     const data = await loadData();
     if (!data.orders) data.orders = [];
 
     const originalLength = data.orders.length;
 
-    // Filter out the order with matching phoneNumber
     data.orders = data.orders.filter(
       (order) => String(order.phoneNumber) !== String(phoneNumber)
     );
@@ -263,24 +326,22 @@ app.delete("/api/orders/:phoneNumber", async (req, res) => {
     await saveData(data);
     res.json({ message: "Order deleted successfully" });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Failed to delete order" });
   }
 });
 
-
-//-------------------- SEARCH PRODUCT ----------------------
+// Search
 app.post("/api/products/search", async (req, res) => {
-  const { q } = req.body; // now expects { q: "search term" }
-  if (!q) return res.status(400).json({ error: "Body parameter 'q' is required" });
+  const { q } = req.body;
+  if (!q) return res.status(400).json({ error: "'q' is required" });
 
   try {
-    const data = await loadData(); // load all data from JSONBin
+    const data = await loadData();
     const sections = ["men", "women", "specials"];
     let results = [];
 
     sections.forEach((section) => {
-      const filtered = data[section].filter(p =>
+      const filtered = data[section].filter((p) =>
         p.name.toLowerCase().includes(q.toLowerCase())
       );
       results = results.concat(filtered);
@@ -288,9 +349,11 @@ app.post("/api/products/search", async (req, res) => {
 
     res.json(results);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Failed to search products" });
   }
 });
+
 // -------------------- START SERVER --------------------
-app.listen(PORT, () => console.log(`✅ Server running at http://localhost:${PORT}`));
+app.listen(PORT, () =>
+  console.log(`✅ Server running at http://localhost:${PORT}`)
+);

@@ -3,7 +3,6 @@ import { ProductSection } from "../components/ProductSection";
 import { Header } from "../components/Header";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useParams } from "react-router-dom";
-import backgroundImage from "../assets/oni/14.jpg" //23
 export const ProductPage = () => {
   const { id } = useParams();
   const sliderRef = useRef(null);
@@ -20,6 +19,7 @@ export const ProductPage = () => {
     location: "",
     phoneNumber: "",
   });
+const [bgImage, setBgImage] = useState("");
 
   // ---------------- Fetch product + related ----------------
   useEffect(() => {
@@ -69,7 +69,19 @@ export const ProductPage = () => {
 
     fetchProductAndRelated();
   }, [id]);
+useEffect(() => {
+  const fetchBg = async () => {
+    try {
+      const res = await fetch("https://onikuroshi-backend-production.up.railway.app/api/productSectionBg");
+      const data = await res.json();
+      setBgImage(data.bg);
+    } catch (err) {
+      console.error("Failed to load product bg");
+    }
+  };
 
+  fetchBg();
+}, []);
   // ---------------- Loading / Not Found ----------------
   if (loading) {
     return (
@@ -189,8 +201,10 @@ const addToCart = () => {
     <Header />
 
     <div
-      className="min-h-screen w-full bg-cover bg-center bg-fixed"
-      style={{ backgroundImage: `url(${backgroundImage})` }}
+ className="min-h-screen w-full bg-cover bg-center bg-fixed"
+  style={{
+    backgroundImage: bgImage ? `url(${bgImage})` : "none",
+  }}
     >
       {/* Dark overlay for readability */}
       <div className="min-h-screen bg-black/40">
@@ -199,7 +213,7 @@ const addToCart = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 mb-20">
             
             {/* Image Gallery */}
-            <div className="relative group">
+            <div className="relative group max-w-[600px] max-h-[600px]  max-md:max-h-[400px] max-md:max-w-[400px] ">
               <div
                 ref={sliderRef}
                 className="flex gap-4 overflow-x-hidden snap-x snap-mandatory rounded-2xl shadow-lg"
@@ -210,7 +224,7 @@ const addToCart = () => {
                     key={idx}
                     src={img}
                     alt={product.name}
-                    className="w-full h-[500px] object-cover flex-shrink-0 snap-center rounded-2xl"
+                    className="w-full h-[600px]  max-h-[600px] max-md:max-h-[400px] max-md:max-w-[400px] object-cover flex-shrink-0 snap-center rounded-2xl"
                   />
                 ))}
               </div>
@@ -248,14 +262,21 @@ const addToCart = () => {
 
             {/* Product Info */}
             <div className="flex flex-col justify-center space-y-10 text-white">
-              <div>
-                <h1 className="text-5xl font-mono font-bold tracking-tight">
-                  {product.name}
-                </h1>
-                <p className="mt-3 text-3xl font-japanese">
-                  {product.price} DT
+             <div>
+              <h1 className="text-4xl font-mono font-bold tracking-tight">
+                {product.name}
+              </h1>
+              
+              {product.description && (
+                <p className="mt-2 text-xl text-white/90 font-mono">
+                  {product.description}
                 </p>
-              </div>
+              )}
+              
+              <p className="mt-3 text-3xl font-japanese">
+                {product.price} DT
+              </p>
+            </div>
 
               {/* Size Selector */}
               <div>
@@ -325,6 +346,7 @@ const addToCart = () => {
             <ProductSection
               products={{ title: "", items: relatedProducts }}
               loading={loading}
+              showBG={false}
             />
           </div>
         </main>

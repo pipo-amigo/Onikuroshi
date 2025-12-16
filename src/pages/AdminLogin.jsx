@@ -9,7 +9,7 @@ export default function AdminLogin() {
   const backendUrl = "https://onikuroshi-backend-production.up.railway.app"; // <---- CHANGE THIS
 
   const handleLogin = async () => {
-    if (!password) return setError("Please enter password!");
+    if (!password) return setError("Please enter password !");
     setError("");
     try {
       const res = await axios.post(`${backendUrl}/api/auth/login`, { password });

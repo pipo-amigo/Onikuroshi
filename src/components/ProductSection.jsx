@@ -1,20 +1,33 @@
 import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-
-export const ProductSection = ({ products, loading }) => {
+import backgroundImage from "../assets/oni/oni2.jpg"  
+export const ProductSection = ({ products, loading,showBG }) => {
   useEffect(() => {
     console.log(products);
   }, []);
   return (
-    <section className="py-16  text-black bg-transparent">
+    <section
+    style={
+  showBG
+    ? {
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }
+    : {}
+}
+
+    className="py-16  text-black bg-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 <h2 className="text-3xl mb-8 font-japanese text-stroke-white drop-shadow-[0_0_12px_rgba(0,0,0,0.9)]">
   {products.title}
 </h2>
 
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div 
+        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
           {loading ? (
             // Placeholder cards
             Array.from({ length: 8 }).map((_, idx) => (
@@ -60,7 +73,7 @@ export const ProductSection = ({ products, loading }) => {
                     )}
                   </div>
                   <div className="p-4 flex flex-col items-start">
-                    <h3 className="text-base sm:text-lg font-mono text-gray-900">
+                    <h3 className="text-[16px] font-mono text-gray-900">
                       {p.name}
                     </h3>
                     <div className="mt-1 sm:mt-2 font-japanese text-gray-800">

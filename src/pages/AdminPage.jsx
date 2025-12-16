@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const AdminPage = () => {
-  const [activeTab, setActiveTab] = useState("dashboard"); // "dashboard" or "orders"
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [banners, setBanners] = useState({ banner1: "", banner2: "" });
   const [selectedBanner, setSelectedBanner] = useState(null);
   const [bannerType, setBannerType] = useState("banner1");
@@ -13,32 +13,38 @@ const AdminPage = () => {
     name: "",
     price: "",
     status: "None",
-    images: [null, null],
+    description: "",
+    images: [null, null, null],
   });
   const [sectionType, setSectionType] = useState("men");
+const [productBg, setProductBg] = useState("");
+const [selectedProductBg, setSelectedProductBg] = useState(null);
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const BASE_URL = "https://onikuroshi-backend-production.up.railway.app";
-
   const navigate = useNavigate();
+
+  const [previewUrls, setPreviewUrls] = useState([null, null, null]);
 
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
     navigate("/admin/login");
   };
+
+
   useEffect(() => {
-  const token = localStorage.getItem("adminToken");
-  if (!token) navigate("/admin/login");
-}, [navigate]);
-  // -------------------- Fetch Data --------------------
+    const token = localStorage.getItem("adminToken");
+    if (!token) navigate("/admin/login");
+  }, [navigate]);
+
   const fetchBanners = async () => {
     try {
       const res = await axios.get(`${BASE_URL}/api/homepage`);
       setBanners(res.data);
     } catch (err) {
-      console.error(err);
+      console.error("fetchBanners:", err);
     }
   };
 
@@ -49,9 +55,13 @@ const AdminPage = () => {
         axios.get(`${BASE_URL}/api/products/women`),
         axios.get(`${BASE_URL}/api/products/specials`),
       ]);
-      setSections({ men: menRes.data, women: womenRes.data, specials: specialsRes.data });
+      setSections({
+        men: menRes.data,
+        women: womenRes.data,
+        specials: specialsRes.data,
+      });
     } catch (err) {
-      console.error(err);
+      console.error("fetchProducts:", err);
     }
   };
 
@@ -60,61 +70,127 @@ const AdminPage = () => {
       setLoading(true);
       const res = await axios.get(`${BASE_URL}/api/orders`);
       setOrders(res.data);
-      console.log(res.data);
     } catch (err) {
-      console.error(err);
+      console.error("fetchOrders:", err);
     } finally {
       setLoading(false);
     }
   };
+const fetchProductBg = async () => {
+  try {
+    const res = await axios.get(`${BASE_URL}/api/productSectionBg`);
+    setProductBg(res.data.bg);
+  } catch (err) {
+    console.error("fetchProductBg:", err);
+  }
+};
+const handleProductBgUpload = async () => {
+  if (!selectedProductBg) return alert("Select an image");
+
+  const formData = new FormData();
+  formData.append("image", selectedProductBg);
+
+  try {
+    setLoading(true);
+    const res = await axios.post(
+      `${BASE_URL}/api/productSectionBg`,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
+
+    alert("Background updated");
+    setProductBg(res.data.bg);
+    setSelectedProductBg(null);
+  } catch (err) {
+    alert("Failed to upload background");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchBanners();
     fetchProducts();
     fetchOrders();
+    fetchProductBg();
+    return () => {
+      previewUrls.forEach((u) => u && URL.revokeObjectURL(u));
+    };
   }, []);
 
-  // -------------------- Handlers --------------------
   const handleBannerUpload = async () => {
     if (!selectedBanner) return alert("Select an image first");
     const formData = new FormData();
     formData.append("image", selectedBanner);
+
     try {
       setLoading(true);
       const res = await axios.post(`${BASE_URL}/api/homepage/${bannerType}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      alert(res.data.message);
+      alert(res.data.message || "Banner uploaded");
       fetchBanners();
+      setSelectedBanner(null);
     } catch (err) {
-      console.error(err);
+      console.error("handleBannerUpload:", err);
       alert("Failed to upload banner");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleImageChange = (index, file) => {
+    const updated = [...newProduct.images];
+    updated[index] = file;
+    setNewProduct({ ...newProduct, images: updated });
+
+    const previews = [...previewUrls];
+    if (previews[index]) URL.revokeObjectURL(previews[index]);
+    previews[index] = file ? URL.createObjectURL(file) : null;
+    setPreviewUrls(previews);
+  };
+
+  const resetForm = () => {
+    previewUrls.forEach((u) => u && URL.revokeObjectURL(u));
+    setPreviewUrls([null, null, null]);
+
+    setNewProduct({
+      name: "",
+      price: "",
+      status: "None",
+      description: "",
+      images: [null, null, null],
+    });
+    setSectionType("men");
+  };
+
   const handleAddProduct = async () => {
-    if (!newProduct.name || !newProduct.price || !newProduct.images[0] || !newProduct.images[1])
-      return alert("All fields + 2 images are required");
+    if (!newProduct.name || !newProduct.price || !newProduct.images[0] || !newProduct.images[1] || !newProduct.description) {
+      return alert("All fields + at least 2 images + description are required");
+    }
 
     const formData = new FormData();
     formData.append("name", newProduct.name);
     formData.append("price", newProduct.price);
     formData.append("status", newProduct.status);
+    formData.append("description", newProduct.description);
     formData.append("image1", newProduct.images[0]);
     formData.append("image2", newProduct.images[1]);
+    if (newProduct.images[2]) formData.append("image3", newProduct.images[2]);
 
     try {
       setLoading(true);
       const res = await axios.post(`${BASE_URL}/api/products/${sectionType}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      alert(res.data.message);
+      alert(res.data.message || "Product added");
       fetchProducts();
+      resetForm();
     } catch (err) {
-      console.error(err);
-      alert("Failed to add product");
+      console.error("handleAddProduct:", err);
+      const msg = err?.response?.data?.error || "Failed to add product";
+      alert(msg);
     } finally {
       setLoading(false);
     }
@@ -127,7 +203,7 @@ const AdminPage = () => {
       await axios.delete(`${BASE_URL}/api/products/${section}/${id}`);
       fetchProducts();
     } catch (err) {
-      console.error(err);
+      console.error("handleDeleteProduct:", err);
       alert("Failed to delete product");
     } finally {
       setLoading(false);
@@ -141,32 +217,30 @@ const AdminPage = () => {
       await axios.put(`${BASE_URL}/api/products/${section}/${product.id}/status`, { status: newStatus });
       fetchProducts();
     } catch (err) {
-      console.error(err);
+      console.error("handleToggleStatus:", err);
       alert("Failed to update status");
     } finally {
       setLoading(false);
     }
   };
 
-const handleDeleteOrder = async (phoneNumber) => {
-  if (!window.confirm("Delete this order?")) return;
-  try {
-    setLoading(true);
-    await axios.delete(`${BASE_URL}/api/orders/${phoneNumber}`);
-    fetchOrders(); // refresh orders after deletion
-  } catch (err) {
-    console.error(err);
-    alert("Failed to delete order");
-  } finally {
-    setLoading(false);
-  }
-};
+  const handleDeleteOrder = async (phoneNumber) => {
+    if (!window.confirm("Delete this order?")) return;
+    try {
+      setLoading(true);
+      await axios.delete(`${BASE_URL}/api/orders/${phoneNumber}`);
+      fetchOrders();
+    } catch (err) {
+      console.error("handleDeleteOrder:", err);
+      alert("Failed to delete order");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-
-  // -------------------- JSX --------------------
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
-        <button
+      <button
         onClick={handleLogout}
         style={{
           padding: "10px 18px",
@@ -180,6 +254,7 @@ const handleDeleteOrder = async (phoneNumber) => {
       >
         Logout
       </button>
+
       {loading && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="w-20 h-20 border-4 border-gray-300 border-t-gray-800 rounded-full animate-spin"></div>
@@ -193,17 +268,13 @@ const handleDeleteOrder = async (phoneNumber) => {
         <div className="flex flex-wrap gap-4 mb-8">
           <button
             onClick={() => setActiveTab("dashboard")}
-            className={`px-4 py-2 rounded font-semibold ${
-              activeTab === "dashboard" ? "bg-gray-800 text-white" : "bg-gray-200 text-gray-800"
-            }`}
+            className={`px-4 py-2 rounded font-semibold ${activeTab === "dashboard" ? "bg-gray-800 text-white" : "bg-gray-200 text-gray-800"}`}
           >
             Dashboard
           </button>
           <button
             onClick={() => setActiveTab("orders")}
-            className={`px-4 py-2 rounded font-semibold ${
-              activeTab === "orders" ? "bg-gray-800 text-white" : "bg-gray-200 text-gray-800"
-            }`}
+            className={`px-4 py-2 rounded font-semibold ${activeTab === "orders" ? "bg-gray-800 text-white" : "bg-gray-200 text-gray-800"}`}
           >
             Orders
           </button>
@@ -217,78 +288,85 @@ const handleDeleteOrder = async (phoneNumber) => {
               <div className="flex flex-col lg:flex-row gap-8">
                 <div className="flex-1 space-y-4">
                   <label className="block text-gray-600 font-medium">Select Banner</label>
-                  <select
-                    value={bannerType}
-                    onChange={(e) => setBannerType(e.target.value)}
-                    className="border border-gray-300 p-2 rounded w-full focus:ring-1 focus:ring-gray-400 focus:outline-none"
-                  >
+                  <select value={bannerType} onChange={(e) => setBannerType(e.target.value)} className="border border-gray-300 p-2 rounded w-full">
                     <option value="banner1">Banner 1</option>
                     <option value="banner2">Banner 2</option>
                   </select>
-                  <input
-                    type="file"
-                    onChange={(e) => setSelectedBanner(e.target.files[0])}
-                    className="block w-full border border-gray-300 p-2 rounded"
-                  />
-                  <button
-                    onClick={handleBannerUpload}
-                    className="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-4 rounded shadow-sm transition"
-                  >
+
+                  <input type="file" onChange={(e) => setSelectedBanner(e.target.files[0])} className="block w-full border border-gray-300 p-2 rounded" />
+
+                  <button onClick={handleBannerUpload} className="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-4 rounded shadow-sm">
                     Upload Banner
                   </button>
                 </div>
+
                 <div className="flex-1 flex gap-4 flex-wrap justify-center">
-                  {banners.banner1 && (
-                    <img src={banners.banner1} alt="Banner1" className="w-56 h-28 object-cover rounded shadow" />
-                  )}
-                  {banners.banner2 && (
-                    <img src={banners.banner2} alt="Banner2" className="w-56 h-28 object-cover rounded shadow" />
-                  )}
+                  {banners.banner1 && <img src={banners.banner1} alt="Banner1" className="w-56 h-28 object-cover rounded shadow" />}
+                  {banners.banner2 && <img src={banners.banner2} alt="Banner2" className="w-56 h-28 object-cover rounded shadow" />}
                 </div>
               </div>
             </section>
+            {/* add homepage bg */}
+
+
+            {/* {add bg } */}
+            <section className="bg-white shadow-md rounded-xl p-6">
+  <h2 className="text-2xl font-semibold text-gray-700 mb-6">
+    🎨 Product Section Background
+  </h2>
+
+  <div className="flex flex-col lg:flex-row gap-6 items-center">
+    <div className="flex-1 space-y-4">
+      <input
+        type="file"
+        onChange={(e) => setSelectedProductBg(e.target.files[0])}
+        className="border border-gray-300 p-2 rounded w-full"
+      />
+
+      <button
+        onClick={handleProductBgUpload}
+        className="w-full bg-gray-800 hover:bg-gray-900 text-white py-2 rounded"
+      >
+        Upload Background
+      </button>
+    </div>
+
+    {productBg && (
+      <div className="flex-1">
+        <p className="mb-2 text-gray-600 font-medium">Current Background</p>
+        <img
+          src={productBg}
+          className="w-full h-[300px] object-contain rounded shadow"
+        />
+      </div>
+    )}
+  </div>
+</section>
 
             {/* --- Add Product --- */}
             <section className="bg-white shadow-md rounded-xl p-6">
               <h2 className="text-2xl font-semibold text-gray-700 mb-6">➕ Add Product</h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <select
-                  value={sectionType}
-                  onChange={(e) => setSectionType(e.target.value)}
-                  className="border border-gray-300 p-2 rounded focus:ring-1 focus:ring-gray-400 focus:outline-none"
-                >
+                <select value={sectionType} onChange={(e) => setSectionType(e.target.value)} className="border border-gray-300 p-2 rounded">
                   <option value="men">Compression</option>
                   <option value="women">Shorts</option>
                   <option value="specials">Specials</option>
                 </select>
-                <input
-                  type="text"
-                  placeholder="Product Name"
-                  value={newProduct.name}
-                  onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                  className="border border-gray-300 p-2 rounded focus:ring-1 focus:ring-gray-400 focus:outline-none"
-                />
-                <input
-                  type="text"
-                  placeholder="Price"
-                  value={newProduct.price}
-                  onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                  className="border border-gray-300 p-2 rounded focus:ring-1 focus:ring-gray-400 focus:outline-none"
-                />
-                <input
-                  type="file"
-                  onChange={(e) => setNewProduct({ ...newProduct, images: [e.target.files[0], newProduct.images[1]] })}
-                  className="border border-gray-300 p-2 rounded"
-                />
-                <input
-                  type="file"
-                  onChange={(e) => setNewProduct({ ...newProduct, images: [newProduct.images[0], e.target.files[0]] })}
-                  className="border border-gray-300 p-2 rounded"
-                />
-                <button
-                  onClick={handleAddProduct}
-                  className="col-span-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 rounded shadow-sm transition"
-                >
+
+                <input type="text" placeholder="Product Name" value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} className="border border-gray-300 p-2 rounded" />
+
+                <input type="text" placeholder="Price" value={newProduct.price} onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })} className="border border-gray-300 p-2 rounded" />
+
+                <textarea placeholder="Description" value={newProduct.description} onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })} className="border border-gray-300 p-2 rounded col-span-full"></textarea>
+
+                {[0, 1, 2].map((i) => (
+                  <div key={i}>
+                    <input type="file" onChange={(e) => handleImageChange(i, e.target.files[0])} className="border border-gray-300 p-2 rounded w-full" />
+                    {previewUrls[i] && <img src={previewUrls[i]} alt={`preview${i + 1}`} className="mt-2 w-full h-28 object-cover rounded" />}
+                  </div>
+                ))}
+
+                <button onClick={handleAddProduct} className="col-span-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 rounded shadow-sm">
                   Add Product
                 </button>
               </div>
@@ -300,28 +378,20 @@ const handleDeleteOrder = async (phoneNumber) => {
                 <h3 className="text-xl font-bold capitalize text-gray-700 mb-4">{section} Products</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
                   {sections[section].map((p) => (
-                    <div
-                      key={p.id}
-                      className="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition bg-gray-50 relative"
-                    >
-                      {p.images[0] && <img src={p.images[0]} alt={p.name} className="w-full h-32 object-cover" />}
-                      {p.images[1] && <img src={p.images[1]} alt={p.name} className="w-full h-32 object-cover border-t" />}
+                    <div key={p.id} className="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition bg-gray-50 relative">
+                      {p.images?.[0] && <img src={p.images[0]} alt={p.name} className="w-full h-32 object-cover" />}
+                      {p.images?.[1] && <img src={p.images[1]} alt={p.name} className="w-full h-32 object-cover border-t" />}
+                      {p.images?.[2] && <img src={p.images[2]} alt={p.name} className="w-full h-32 object-cover border-t" />}
                       <div className="p-3 text-center">
                         <p className="font-semibold text-gray-800">{p.name}</p>
+                        <p className="text-gray-600 text-sm mb-1">{p.description}</p>
                         <p className="text-gray-600">{p.price}DT</p>
-                        <button
-                          onClick={() => handleToggleStatus(section, p)}
-                          className={`mt-3 px-4 py-1 rounded text-white text-sm transition shadow ${
-                            p.status === "Sold Out" ? "bg-gray-500 hover:bg-gray-600" : "bg-gray-800 hover:bg-gray-900"
-                          }`}
-                        >
+                        <button onClick={() => handleToggleStatus(section, p)} className={`mt-3 px-4 py-1 rounded text-white text-sm transition shadow ${p.status === "Sold Out" ? "bg-gray-500 hover:bg-gray-600" : "bg-gray-800 hover:bg-gray-900"}`}>
                           {p.status === "Sold Out" ? "Sold Out" : "Set Sold Out"}
                         </button>
                       </div>
-                      <button
-                        onClick={() => handleDeleteProduct(section, p.id)}
-                        className="absolute top-2 right-2 bg-white text-red-600 rounded-full w-7 h-7 flex items-center justify-center shadow hover:bg-red-100"
-                      >
+
+                      <button onClick={() => handleDeleteProduct(section, p.id)} className="absolute top-2 right-2 bg-white text-red-600 rounded-full w-7 h-7 flex items-center justify-center shadow hover:bg-red-100">
                         ✕
                       </button>
                     </div>
@@ -363,12 +433,9 @@ const handleDeleteOrder = async (phoneNumber) => {
                         <td className="py-2 px-4 border">{order.phoneNumber}</td>
                         <td className="py-2 px-4 border">{order.location}</td>
                         <td className="py-2 px-4 border">
-                        <button
-                          onClick={() => handleDeleteOrder(order.phoneNumber)}
-                          className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition"
-                        >
-                          Delete
-                        </button>
+                          <button onClick={() => handleDeleteOrder(order.phoneNumber)} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition">
+                            Delete
+                          </button>
                         </td>
                       </tr>
                     ))}
