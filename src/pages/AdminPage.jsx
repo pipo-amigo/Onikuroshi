@@ -310,7 +310,7 @@ const handleProductBgUpload = async () => {
 
 
             {/* {add bg } */}
-            <section className="bg-white shadow-md rounded-xl p-6">
+            {/* <section className="bg-white shadow-md rounded-xl p-6">
   <h2 className="text-2xl font-semibold text-gray-700 mb-6">
     🎨 Product Section Background
   </h2>
@@ -341,7 +341,7 @@ const handleProductBgUpload = async () => {
       </div>
     )}
   </div>
-</section>
+</section> */}
 
             {/* --- Add Product --- */}
             <section className="bg-white shadow-md rounded-xl p-6">
