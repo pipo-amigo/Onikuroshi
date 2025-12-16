@@ -3,6 +3,7 @@ import { ProductSection } from "../components/ProductSection";
 import { Header } from "../components/Header";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useParams } from "react-router-dom";
+import ONIBG from "../assets/oni/oni1.jpg"
 export const ProductPage = () => {
   const { id } = useParams();
   const sliderRef = useRef(null);
@@ -203,7 +204,7 @@ const addToCart = () => {
     <div
  className="min-h-screen w-full bg-cover bg-center bg-fixed"
   style={{
-    backgroundImage: bgImage ? `url(${bgImage})` : "none",
+    backgroundImage: ONIBG ? `url(${ONIBG})` : "none",
   }}
     >
       {/* Dark overlay for readability */}
